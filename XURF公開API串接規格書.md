@@ -15,12 +15,6 @@
 
 本文件統一說明 XURF 對外開放 API 的 Endpoint、認證方式、Request、Response、cURL 與 JavaScript 呼叫範例。
 
-### 重要限制
-
-1. 語音點餐廠商 API 的 HMAC 憑證、Nonce 防重放、來源 IP/CIDR 白名單及權限驗證，是正式對外開放前必須完成的驗證層。現有正式路由尚未完成此專用驗證層，完成後才可交付廠商憑證。
-2. `AppVIP`、`appmember`、`add_pos_order` 尚未定義 Base URL、授權 Header、Response Schema 與錯誤碼；正式串接前須向 XURF 確認缺少的項目。
-3. 文件中的 Token、Client ID、簽章、企業與門市代號皆為範例或占位值，不可直接用於正式環境。
-
 ### 版號歷程
 
 | 版號 | 日期 | 異動說明 |
