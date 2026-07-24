@@ -5,30 +5,27 @@
 | 項目 | 內容 |
 |---|---|
 | 文件名稱 | XURF 公開 API 串接規格書 |
-| 文件版號 | v1.0 |
-| 文件日期 | 2026-07-23 |
+| 文件版號 | v1.1 |
+| 文件日期 | 2026-07-24 |
 | 正式環境 Base URL | `https://goapi2.xurf.ai` |
 | 資料格式 | JSON |
 | 編碼 | UTF-8 |
 
 ### 文件目的
 
-本文件整合下列資料來源中列出的全部 API，統一說明 Endpoint、認證方式、Request、Response、cURL 與 JavaScript 呼叫範例：
-
-- `AppVIP-AppMember-POS.pdf`
-- `Xurf 雲悦串接規格書 1.3.pdf`
+本文件統一說明 XURF 對外開放 API 的 Endpoint、認證方式、Request、Response、cURL 與 JavaScript 呼叫範例。
 
 ### 重要限制
 
 1. 語音點餐廠商 API 的 HMAC 憑證、Nonce 防重放、來源 IP/CIDR 白名單及權限驗證，是正式對外開放前必須完成的驗證層。現有正式路由尚未完成此專用驗證層，完成後才可交付廠商憑證。
-2. `add_pos_order` 的來源 PDF 未定義 Base URL、授權 Header、Response Schema 與錯誤碼。本文件只整理來源文件已明確定義的契約；正式串接前須向 XURF 確認缺少的項目。
+2. `AppVIP`、`appmember`、`add_pos_order` 尚未定義 Base URL、授權 Header、Response Schema 與錯誤碼；正式串接前須向 XURF 確認缺少的項目。
 3. 文件中的 Token、Client ID、簽章、企業與門市代號皆為範例或占位值，不可直接用於正式環境。
 
 ### 版號歷程
 
 | 版號 | 日期 | 異動說明 |
 |---|---|---|
-| v1.0 | 2026-07-23 | 建立公開 API 文件，包含 POS 銷售訂單上傳及語音點餐廠商 API。 |
+| v1.0 | 2026-07-23 | 建立公開 API 文件。 |
 
 ---
 
@@ -36,7 +33,9 @@
 
 | 類別 | 功能 | Method | Endpoint | 認證 |
 |---|---|:---:|---|---|
-| POS 上傳 | 上傳 POS 訂單 | POST | `/v1/services/epos/add_pos_order` | 來源 PDF 未定義 |
+| 會員 | 取得會員點數或票券 | POST | `/api/AppVIP` | 未定義 |
+| 會員 | 取得消費者訂單明細 | POST | `/api/appmember` | 未定義 |
+| POS 上傳 | 上傳 POS 訂單 | POST | `/v1/services/epos/add_pos_order` | 未定義 |
 | 語音點餐廠商 | 取得外帶菜單 | GET | `/MenuFood/GetFoodList` | HMAC + IP 白名單 |
 | 語音點餐廠商 | 取得門市接單狀態 | GET | `/Shop/GetShopInfo` | HMAC + IP 白名單 |
 | 語音點餐廠商 | 建立線上訂單 | POST | `/Order/CalculateOrderPreview` | HMAC + IP 白名單 |
@@ -51,7 +50,7 @@
 https://goapi2.xurf.ai
 ```
 
-`add_pos_order` 的來源 PDF 只提供相對路徑，未明確指定 Base URL。以下範例暫以本文件正式環境 Base URL 組合，正式使用前須由 XURF 確認。
+`AppVIP`、`appmember`、`add_pos_order` 只提供相對路徑，未明確指定 Base URL。以下範例暫以本文件正式環境 Base URL 組合，正式使用前須由 XURF 確認。
 
 ### 2.2 資料格式
 
@@ -256,7 +255,7 @@ Kiosk 或 POS 完成訂單後，將 BearPOS 格式的 `order_info` 傳送至雲�
 
 ### 4.2 cURL
 
-來源 PDF 未定義授權方式；以下只帶入已知的媒體類型 Header。
+尚未定義授權方式；以下只帶入已知的媒體類型 Header。
 
 ```bash
 curl 'https://goapi2.xurf.ai/v1/services/epos/add_pos_order' \
@@ -307,13 +306,90 @@ console.log(await response.json());
 
 ### 4.4 Response
 
-來源 PDF 未提供 Response Schema、成功範例與錯誤碼，正式串接前須向 XURF 確認。
+尚未提供 Response Schema、成功範例與錯誤碼，正式串接前須向 XURF 確認。
 
 ---
 
-## 5. GetFoodList 外帶菜單
+## 5. AppVIP 會員點數與票券
 
 ### 5.1 Request
+
+```http
+POST /api/AppVIP
+```
+
+與 `POST /api/appvip` 同義。用途：取得會員點數或票券物件。Request 型別為 `appvip.AppVIPRequest`。
+
+| 欄位 | 說明 |
+|---|---|
+| `act` | 指令，例如 `getvipandcardinfo`。 |
+| `AMobile` | 會員手機。 |
+| `Account` | 會員帳號。 |
+| `ActivityID` | 活動代碼。 |
+| `EnterPriseID` / `EnterpriseID` | 企業代碼（兩者可互用）。 |
+| `FromTDEmail` / `FromTDID` / `FromTDNickName` | 第三方登入資訊。 |
+| `GID` / `HWInfo` / `MachineID` | 裝置或系統資料。 |
+| `Point` / `Ticket` | 點數或票券物件。 |
+| `QrCode` / `ShopID` / `TendCode` / `TradeType` | 進階欄位。 |
+| `token` / `userDevice` | 兼容欄位。 |
+
+```json
+{
+  "act": "getvipandcardinfo",
+  "EnterpriseID": "your_company_id",
+  "Account": "0912345678",
+  "MachineID": "your_machine_code",
+  "Point": { "type": "general" }
+}
+```
+
+### 5.2 Response
+
+尚未提供 Response Schema、成功範例與錯誤碼，正式串接前須向 XURF 確認。
+
+---
+
+## 6. AppMember 消費者訂單明細
+
+### 6.1 Request
+
+```http
+POST /api/appmember
+```
+
+用途：取得消費者訂單明細。Request 型別為 `appmember.AppMemberRequest`。
+
+| 欄位 | 說明 |
+|---|---|
+| `act` | 指令，例如 `GetOrderList`。 |
+| `Account` | 使用者帳號。 |
+| `EnterPriseID` / `EnterpriseID` | 企業編號。 |
+| `BSaleTime` / `ESaleTime` | 銷售時間範圍。 |
+| `BTakeWayTime2` / `ETakeWayTime2` | 取餐時間範圍，格式 `YYYYMMDD`。 |
+| `security` | 舊版驗證字串。 |
+| `orderby` / `srow` | 排序與分頁。 |
+
+```json
+{
+  "act": "GetOrderList",
+  "EnterpriseID": "your_company_id",
+  "ShopID": "SHOP001",
+  "srow": "1",
+  "erow": "100",
+  "BTakeWayTime2": "20251114",
+  "ETakeWayTime2": "20251120"
+}
+```
+
+### 6.2 Response
+
+尚未提供 Response Schema、成功範例與錯誤碼，正式串接前須向 XURF 確認。
+
+---
+
+## 7. GetFoodList 外帶菜單
+
+### 7.1 Request
 
 ```http
 GET /MenuFood/GetFoodList
@@ -331,7 +407,7 @@ GET /MenuFood/GetFoodList
 | `mouldCode` | 否 | string | 指定菜單模板；未傳時由系統取得有效模板。 |
 | `showHidenKind` | 否 | boolean | 是否包含隱藏分類，廠商固定使用 `false`。 |
 
-### 5.2 使用規則
+### 7.2 使用規則
 
 - Response 為 JSON Array。
 - 空陣列 `[]` 可能表示無可用菜單、參數錯誤或查詢失敗，不得視為正常可下單狀態。
@@ -339,7 +415,7 @@ GET /MenuFood/GetFoodList
 - `isSoldOut=true`、`isHidden=true` 或 `stop=true` 的商品不可下單。
 - 商品 ID、名稱、分類與價格必須使用同一次 API 回傳資料，不得由廠商自行維護售價。
 
-### 5.3 Response 欄位
+### 7.3 Response 欄位
 
 #### 主商品
 
@@ -398,7 +474,7 @@ GET /MenuFood/GetFoodList
 
 `productDetailList[].items[]` 包含 `foodId`、`foodName`、`originFoodName`、`price`、`isSoldOut`、`isHidden`、`stop`，下單時分別對應選項的 `FoodID`、`FoodName`、`OriginFoodName`、`AdditionalPrice`。
 
-### 5.4 Response 範例
+### 7.4 Response 範例
 
 ```json
 [
@@ -441,7 +517,7 @@ GET /MenuFood/GetFoodList
 ]
 ```
 
-### 5.5 cURL
+### 7.5 cURL
 
 ```bash
 curl -G 'https://goapi2.xurf.ai/MenuFood/GetFoodList' \
@@ -463,7 +539,7 @@ curl -G 'https://goapi2.xurf.ai/MenuFood/GetFoodList' \
 enterpriseId=your_company_id&foodId=FOOD001&langId=TW&orderType=takeout&shopId=SHOP001
 ```
 
-### 5.6 JavaScript
+### 7.6 JavaScript
 
 使用第 3.2 節的共用函式：
 
@@ -491,9 +567,9 @@ console.log(foods);
 
 ---
 
-## 6. 門市接單狀態
+## 8. 門市接單狀態
 
-### 6.1 Request
+### 8.1 Request
 
 ```http
 GET /Shop/GetShopInfo
@@ -508,7 +584,7 @@ GET /Shop/GetShopInfo
 
 既有前端可能傳送 `version`，但三支語音點餐 API 的核心邏輯不依賴該欄位，廠商不需傳送。若需標示自身版本，使用 `X-Client-Version` Header。
 
-### 6.2 Response
+### 8.2 Response
 
 API 回傳的 `Result` 是 JSON 字串，必須再解析一次，取得 `takeoutSettings`：
 
@@ -526,7 +602,7 @@ API 回傳的 `Result` 是 JSON 字串，必須再解析一次，取得 `takeout
 
 欄位名稱 `IsRejectOrder` 與畫面「接受訂單」語意相反。呼叫端必須採 fail-closed，狀態不明時不可送單。建議每次下單前即時查詢；若需快取，最長 30 秒。
 
-### 6.3 cURL
+### 8.3 cURL
 
 ```bash
 curl -G 'https://goapi2.xurf.ai/Shop/GetShopInfo' \
@@ -540,7 +616,7 @@ curl -G 'https://goapi2.xurf.ai/Shop/GetShopInfo' \
   --data-urlencode 'shopId=SHOP001'
 ```
 
-### 6.4 JavaScript
+### 8.4 JavaScript
 
 ```javascript
 const path = '/Shop/GetShopInfo';
@@ -572,9 +648,9 @@ if (!acceptsOrders) {
 
 ---
 
-## 7. 線上點餐下單
+## 9. 線上點餐下單
 
-### 7.1 Request
+### 9.1 Request
 
 ```http
 POST /Order/CalculateOrderPreview
@@ -583,7 +659,7 @@ Content-Type: application/json
 
 建立外帶線上訂單。API 會驗證商品並儲存訂單；店內付款時會通知 POS。
 
-### 7.2 必要規則
+### 9.2 必要規則
 
 - `Order.OrderType` 固定為 `2`。
 - `Order.SaleType` 固定為 `"takeout"`。
@@ -595,7 +671,7 @@ Content-Type: application/json
 - 下單前必須確認門市接受訂單。
 - 時間使用 ISO 8601。
 
-### 7.3 主要欄位
+### 9.3 主要欄位
 
 | 欄位 | 必填 | 型別 | 說明 |
 |---|:---:|---|---|
@@ -631,7 +707,7 @@ Content-Type: application/json
 | `OptionItems[].Quantity` | 是 | integer | 選項數量。 |
 | `OptionItems[].AdditionalPrice` | 是 | number | 選項加價。 |
 
-### 7.4 套餐與金額規則
+### 9.4 套餐與金額規則
 
 - 主商品選項來自 `productDetailList[].items[]`，放入 `Items[].OptionItems[]`。
 - 套餐附餐來自 `comboList[]`，每個群組放入一筆 `Items[].ComboItems[]`。
@@ -641,7 +717,7 @@ Content-Type: application/json
 - `Items[].AddCost` 只計主商品自身選項加價；附餐及附餐選項加價另計入 `Items[].Total`、`Order.Total` 與 `Order.PayTotal`。
 - 最終應付金額以 API 回傳的 `data.payTotal` 為準。
 
-### 7.5 Request Body 範例
+### 9.5 Request Body 範例
 
 ```json
 {
@@ -784,7 +860,7 @@ Content-Type: application/json
 }
 ```
 
-### 7.6 cURL
+### 9.6 cURL
 
 `voice-order.json` 必須與計算簽章時使用的 JSON 字串完全相同。
 
@@ -801,7 +877,7 @@ curl 'https://goapi2.xurf.ai/Order/CalculateOrderPreview' \
   --data-binary '@voice-order.json'
 ```
 
-### 7.7 JavaScript
+### 9.7 JavaScript
 
 ```javascript
 const path = '/Order/CalculateOrderPreview';
@@ -829,11 +905,11 @@ if (result.data?.orderID !== orderRequest.Order.ID) {
 console.log(result);
 ```
 
-### 7.8 Success Response
+### 9.8 Success Response
 
 成功必須同時符合 HTTP Status `200`、`code` 為 `0`，且 `data.orderID` 與送出的 `Order.ID` 相同。
 
-> 來源 PDF 的 Request 範例金額為 `155`，Success Response 範例的 `payTotal` 為 `135`。兩段為獨立示例；實際應付金額一律以當次 API 回傳的 `data.payTotal` 為準。
+> Request 範例金額為 `155`，Success Response 範例的 `payTotal` 為 `135`。兩段為獨立示例；實際應付金額一律以當次 API 回傳的 `data.payTotal` 為準。
 
 ```json
 {
@@ -851,7 +927,7 @@ console.log(result);
 }
 ```
 
-### 7.9 業務錯誤
+### 9.9 業務錯誤
 
 部分業務錯誤仍使用 HTTP `200`，必須檢查內層 `code`。
 
@@ -869,27 +945,6 @@ console.log(result);
 
 ---
 
-## 8. 上線驗收
-
-### 13.1 通用
-
-- 所有 cURL 與程式呼叫皆帶入規格要求的 Header。
-- 憑證與密碼不得提交到 Git。
-- API 逾時或狀態不明時，不得向使用者宣告成功。
-- 問題回報須提供發生時間、Endpoint、HTTP Status 及遮蔽敏感資料後的回應。
-
-### 13.2 語音點餐廠商
-
-- 未建立廠商憑證時，三支 API 均回傳 `401 INVALID_CLIENT`。
-- 私密金鑰錯誤、簽章錯誤、逾時或重送 Nonce 均不可通過。
-- 非白名單來源回傳 `403 SOURCE_NOT_ALLOWED`。
-- 已授權廠商不可跨企業或門市呼叫。
-- `GetFoodList` 可取得外帶菜單，下單使用相同商品 ID 與價格。
-- 門市關閉接單後不可送單；開啟後可建立外帶訂單。
-- POS 可收到訂單，且備註顯示「語音點餐」。
-- 同一 `Order.ID` 因逾時重送時不得產生兩張訂單。
-- 停售、售完、錯誤商品 ID 與額滿時段均能正確提示。
-
-### 13.3 技術支援
+## 10. 技術支援
 
 XURF API Support：`service@cloudxurf.com`

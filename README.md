@@ -20,6 +20,8 @@
 
 | API | Endpoint |
 |---|---|
+| 會員點數與票券 | `POST /api/AppVIP` |
+| 消費者訂單明細 | `POST /api/appmember` |
 | POS 銷售訂單上傳 | `POST /v1/services/epos/add_pos_order` |
 | 外帶菜單 | `GET /MenuFood/GetFoodList` |
 | 門市接單狀態 | `GET /Shop/GetShopInfo` |
@@ -43,7 +45,7 @@ Content-Type: application/json
 
 > HMAC 憑證、Nonce 防重放、來源白名單及權限驗證層尚待正式完成，完成後才可交付廠商使用。
 
-POS 銷售訂單上傳的來源文件未定義授權 Header，正式串接前須向 XURF 確認。
+`AppVIP`、`appmember`、`add_pos_order` 尚未定義授權 Header，正式串接前須向 XURF 確認。
 
 ## 最小請求範例
 
